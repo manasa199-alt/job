@@ -1,0 +1,119 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Submit Job Link</title>
+    <!-- Tailwind CSS CDN for responsive styling -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        /* Custom styles for the Inter font and a smooth transition effect */
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap');
+        body {
+            font-family: 'Inter', sans-serif;
+        }
+        .transition-all-smooth {
+            transition-property: all;
+            transition-duration: 300ms;
+            transition-timing-function: cubic-bezier(0.4, 0, 0.2, 1);
+        }
+    </style>
+</head>
+<body class="bg-gray-100 flex items-center justify-center min-h-screen p-4">
+
+    <!-- Main card container for the form -->
+    <div class="w-full max-w-md bg-white rounded-xl shadow-lg p-6 md:p-8">
+        <div class="text-center mb-6">
+            <h1 class="text-2xl md:text-3xl font-bold text-gray-800 mb-2">Submit Job Link</h1>
+            <p class="text-gray-600 text-sm">Paste the job description URL below.</p>
+        </div>
+
+        <!-- The main form -->
+        <form id="jobLinkForm" class="space-y-4">
+            <!-- Input field for the job link -->
+            <input 
+                type="url" 
+                id="jobLinkInput" 
+                name="job_description_link"
+                placeholder="Enter job link here"
+                class="w-full p-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all-smooth"
+                required
+            >
+
+            <!-- Submission button -->
+            <button 
+                type="submit" 
+                id="submitButton"
+                class="w-full bg-blue-600 text-white font-semibold py-3 px-4 rounded-lg hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 transition-all-smooth"
+            >
+                Submit
+            </button>
+        </form>
+
+        <!-- Container for status messages -->
+        <div id="statusMessage" class="mt-6 text-center text-sm font-medium"></div>
+    </div>
+
+    <script>
+        // Get references to the form, input, button, and message elements
+        const form = document.getElementById('jobLinkForm');
+        const input = document.getElementById('jobLinkInput');
+        const button = document.getElementById('submitButton');
+        const statusMessage = document.getElementById('statusMessage');
+
+        // URL for the webhook
+        const webhookUrl = 'https://hook.eu2.make.com/9ykgiebo3vbgbo8tz1upnayuk6t8uqge';
+
+        // Function to show a status message with a given color
+        const showStatus = (message, color) => {
+            statusMessage.textContent = message;
+            statusMessage.className = `mt-6 text-center text-sm font-medium ${color}`;
+        };
+
+        // Event listener for form submission
+        form.addEventListener('submit', async (e) => {
+            // Prevent the default form submission behavior
+            e.preventDefault();
+
+            // Display a loading message and disable the button
+            showStatus('Submitting...', 'text-gray-500');
+            button.disabled = true;
+            button.classList.remove('hover:bg-blue-700');
+            button.classList.add('bg-blue-400', 'cursor-not-allowed');
+
+            const jobLink = input.value;
+
+            try {
+                // Send a POST request to the webhook
+                const response = await fetch(webhookUrl, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({ job_description_link: jobLink })
+                });
+
+                if (response.ok) {
+                    showStatus('Success! Link submitted.', 'text-green-600');
+                    // Optionally clear the input field after a successful submission
+                    input.value = '';
+                } else {
+                    const errorData = await response.json();
+                    console.error('Submission failed:', errorData);
+                    showStatus(`Error: ${errorData.message || 'Submission failed.'}`, 'text-red-600');
+                }
+            } catch (error) {
+                // Log any network or other errors to the console
+                console.error('Network or other error:', error);
+                showStatus('Network error. Please try again.', 'text-red-600');
+            } finally {
+                // Re-enable the button regardless of the outcome
+                button.disabled = false;
+                button.classList.remove('bg-blue-400', 'cursor-not-allowed');
+                button.classList.add('hover:bg-blue-700');
+            }
+        });
+    </script>
+</body>
+</html>
+
